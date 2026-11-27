@@ -157,8 +157,10 @@ struct PlaylistsScreen: View {
 
     private func infoColumn(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.caption).foregroundStyle(Color.textSecondary)
-            Text(value).fontWeight(.bold).foregroundStyle(.white).lineLimit(1)
+            Text(label).font(.caption2).foregroundStyle(Color.textSecondary)
+            // Show the FULL MAC / key — shrink to fit the column instead of truncating.
+            Text(value).font(.caption.bold()).foregroundStyle(.white)
+                .lineLimit(1).minimumScaleFactor(0.5)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

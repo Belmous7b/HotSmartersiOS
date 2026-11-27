@@ -20,3 +20,8 @@ xcuserdata/
 # Swift Package Manager
 .build/
 .swiftpm/
+
+# CocoaPods (restored on CI by `pod install`)
+Pods/
+*.xcworkspace
+Podfile.lock

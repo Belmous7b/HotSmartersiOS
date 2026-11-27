@@ -9,7 +9,8 @@ struct LiveScreen: View {
     let onFullscreenPlay: (String, String) -> Void
 
     @EnvironmentObject var repo: ContentRepository
-    @StateObject private var player = PlayerController()
+    @StateObject private var player = VlcPlayerController()      // inline preview
+    @StateObject private var fsPlayer = VlcPlayerController()    // fullscreen
 
     @State private var mode: LiveMode = .channels
     @State private var searchOpen = false
@@ -146,7 +147,7 @@ struct LiveScreen: View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottom) {
                 Color.black
-                VideoPlayerView(controller: player, showControls: false, gravity: .resizeAspectFill)
+                VlcPlayerView(controller: player)
                 HStack(spacing: 16) {
                     ctrlButton(curIsFav ? "heart.fill" : "heart", tint: .hotRed) { toggleFav() }
                     ctrlButton("folder.badge.plus") { if cur != nil { showFavDialog = true } }
@@ -251,9 +252,14 @@ struct LiveScreen: View {
     private var fullscreenPlayer: some View {
         ZStack(alignment: .topLeading) {
             Color.black.ignoresSafeArea()
-            VideoPlayerView(controller: player, showControls: true, gravity: .resizeAspectFill).ignoresSafeArea()
-            Button { fullscreen = false } label: { Image(systemName: "arrow.left").foregroundStyle(.white).padding(16) }
+            VlcPlayerView(controller: fsPlayer).ignoresSafeArea()
+            Button { fullscreen = false } label: {
+                Image(systemName: "arrow.left").font(.title3).foregroundStyle(.white)
+                    .frame(width: 44, height: 44).background(Color.black.opacity(0.4), in: Circle()).padding(16)
+            }
         }
+        .onAppear { player.pause(); if let c = cur { fsPlayer.load(url: c.url) } }
+        .onDisappear { fsPlayer.teardown(); player.resume() }
     }
 
     // MARK: rows & chips
@@ -289,7 +295,14 @@ struct LiveScreen: View {
             HStack {
                 Text(row.name).font(.footnote).fontWeight(selected ? .bold : .regular)
                     .foregroundStyle(selected ? Color.hotRed : .white).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-                if row.archive { Image(systemName: "clock.arrow.circlepath").font(.caption2).foregroundStyle(Color.textSecondary) }
+                if row.archive {
+                    // Clean catch-up badge on channels that support it.
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.hotRed)
+                        .padding(5)
+                        .background(Color.hotRed.opacity(0.15), in: Circle())
+                }
             }
             .padding(.horizontal, 12).padding(.vertical, 11)
             .background(selected ? Color.hotRed.opacity(0.18) : .clear)

@@ -9,6 +9,10 @@ struct HotSmartersApp: App {
     @StateObject private var activation = ActivationStore.shared
 
     init() {
+        // Big on-disk HTTP cache so posters/logos load once and come back instantly
+        // afterwards (AsyncImage/URLSession re-download every time without this).
+        URLCache.shared = URLCache(memoryCapacity: 64 * 1024 * 1024,
+                                   diskCapacity: 512 * 1024 * 1024)
         // Lock adult categories by default (PIN "0000") on first run.
         Prefs.ensureDefaultParental()
     }
