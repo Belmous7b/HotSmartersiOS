@@ -97,9 +97,9 @@ struct LiveScreen: View {
             // Three columns that all stay visible: categories (fixed) | channel
             // names (flexible) | preview + guide (flexible).
             HStack(spacing: 0) {
-                leftPane.frame(width: 148)
+                leftPane.frame(width: 138)
                 Divider().background(Color.dividerColor)
-                middlePane.frame(width: 230)
+                middlePane.frame(width: 192)
                 Divider().background(Color.dividerColor)
                 // Preview + guide take all remaining width, so the video is bigger.
                 rightPane.frame(maxWidth: .infinity)
@@ -162,9 +162,9 @@ struct LiveScreen: View {
             .aspectRatio(16.0/9.0, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.hotRed.opacity(0.55), lineWidth: 2))
-            .padding(10)
+            .padding(6)
 
-            epgPanel.frame(height: 184)
+            epgPanel.frame(height: 140)
         }
     }
 
@@ -303,7 +303,7 @@ struct LiveScreen: View {
                         .background(Color.hotRed.opacity(0.15), in: Circle())
                 }
             }
-            .padding(.horizontal, 12).padding(.vertical, 7)
+            .padding(.horizontal, 12).padding(.vertical, 4)
             .background(selected ? Color.hotRed.opacity(0.18) : .clear)
         }
         .buttonStyle(.plain)
