@@ -40,7 +40,8 @@ final class ContentRepository: ObservableObject {
 
     /// Non-isolated mirror of the connected playlist id, so the per-playlist stores
     /// (which run off the main actor) can key their data without touching the actor.
-    nonisolated(unsafe) static var currentPlaylistId: String = ""
+    /// It is only ever written on the main actor (from `current`'s didSet).
+    static var currentPlaylistId: String = ""
 
     /// Id of the currently connected playlist (used to scope per-playlist stores).
     var currentId: String { current?.id ?? "" }

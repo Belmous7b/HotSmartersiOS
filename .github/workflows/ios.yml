@@ -18,19 +18,25 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-15
+    # Intel runner — the arm64 (macos-14/15) runners aren't available on this account.
+    runs-on: macos-13
     timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select latest stable Xcode (needs Xcode 16 for this project)
+      - name: Select Xcode (latest on the Intel image, ~15.2)
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
 
       - name: Xcode version
         run: xcodebuild -version
+
+      - name: Install XcodeGen & generate the project
+        run: |
+          brew install xcodegen
+          xcodegen generate
 
       # ---- 1. Compile for the Simulator (the real pass/fail check) ----
       - name: Build (iOS Simulator)
