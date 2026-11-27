@@ -269,7 +269,7 @@ struct ConnectingOverlay: View {
                 Text(stageText).font(.subheadline).foregroundStyle(Color.textSecondary)
                 if !counts.isEmpty && !isWebsite {
                     Spacer().frame(height: 8)
-                    Text(counts.joined(separator: "   ·   ")).font(.callout.bold()).foregroundStyle(.hotRed)
+                    Text(counts.joined(separator: "   ·   ")).font(.callout.bold()).foregroundStyle(Color.hotRed)
                 }
             }
             .padding(24)

@@ -8,8 +8,8 @@ name: iOS build
 # Run it from the repo's "Actions" tab (Run workflow) or on every push.
 
 on:
-  push:
-    branches: [ "**" ]
+  # Manual only — Codemagic (codemagic.yaml) is the active CI. This stays as a
+  # fallback you can trigger from the Actions tab if you ever add GitHub billing.
   workflow_dispatch:
 
 jobs:
