@@ -35,6 +35,8 @@ struct HomeScreen: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Keep the search row / headers clear of the very top edge.
+            .padding(.top, 8)
         }
         .background(Color.darkBg)
     }

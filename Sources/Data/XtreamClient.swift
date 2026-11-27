@@ -44,7 +44,9 @@ final class XtreamClient {
                 name: o.optString("name"),
                 logo: o.optString("stream_icon").nonBlank,
                 group: o.optString("category_id"),
-                url: "\(host)/live/\(username.urlEncoded)/\(password.urlEncoded)/\(id).ts",
+                // iOS AVPlayer can't play raw MPEG-TS (.ts); request the HLS variant
+                // (.m3u8) which Xtream servers expose for the same channel.
+                url: "\(host)/live/\(username.urlEncoded)/\(password.urlEncoded)/\(id).m3u8",
                 tvgId: nil,
                 archive: o.optInt("tv_archive") == 1 || o.optInt("tv_archive_duration") > 0
             )

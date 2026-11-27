@@ -120,7 +120,7 @@ struct DashboardScreen: View {
         ZStack(alignment: .bottomLeading) {
             let bg = featuredInfo?.backdrop ?? featuredInfo?.poster ?? featured?.poster
             RemoteImage(url: bg, contentMode: .fill) { LinearGradient.brandPanel }
-                .frame(height: 320).frame(maxWidth: .infinity).clipped()
+                .frame(height: 210).frame(maxWidth: .infinity).clipped()
             LinearGradient(colors: [.clear, .darkBg], startPoint: .top, endPoint: .bottom)
             LinearGradient(colors: [.darkBg.opacity(0.9), .clear], startPoint: .leading, endPoint: .trailing)
 
@@ -150,21 +150,21 @@ struct DashboardScreen: View {
                 }
                 Text(featured?.name ?? "Welcome").font(.title2.bold()).foregroundStyle(.white).lineLimit(2)
                 if let o = featuredInfo?.overview, !o.isEmpty {
-                    Text(o).font(.footnote).foregroundStyle(Color.textSecondary).lineLimit(3)
+                    Text(o).font(.footnote).foregroundStyle(Color.textSecondary).lineLimit(2)
                 }
                 if let item = featured {
                     Button { onOpenMovie(item) } label: {
                         HStack { Image(systemName: "play.fill"); Text("  " + tr("Play")).fontWeight(.bold) }
-                            .foregroundStyle(.white).padding(.horizontal, 22).padding(.vertical, 10)
+                            .foregroundStyle(.white).padding(.horizontal, 20).padding(.vertical, 8)
                             .background(Color.hotRed).clipShape(Capsule())
                     }
-                    .padding(.top, 14)
+                    .padding(.top, 10)
                 }
             }
             .frame(maxWidth: 420, alignment: .leading)
-            .padding(.leading, 24).padding(.bottom, 20).padding(.trailing, 16)
+            .padding(.leading, 24).padding(.bottom, 16).padding(.trailing, 16)
         }
-        .frame(height: 320)
+        .frame(height: 210)
     }
 
     private func headerIcon(_ system: String, action: @escaping () -> Void) -> some View {

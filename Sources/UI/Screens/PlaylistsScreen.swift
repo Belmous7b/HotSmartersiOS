@@ -26,26 +26,22 @@ struct PlaylistsScreen: View {
 
     private var notifications: [PanelNotification] { activation.current?.notifications ?? [] }
 
-    private let columns = [GridItem(.adaptive(minimum: 200), spacing: 14)]
+    private let columns = [GridItem(.adaptive(minimum: 156), spacing: 12)]
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Color.darkBg.ignoresSafeArea()
             VStack(spacing: 0) {
-                BrandTitle(height: 80).frame(maxWidth: .infinity)
+                BrandTitle(height: 56).frame(maxWidth: .infinity)
                 if let error {
                     Text(error).font(.footnote).foregroundStyle(Color.hotRed).padding(.top, 10)
                 }
-                Spacer().frame(height: 16)
+                Spacer().frame(height: 12)
 
-                // Solid, non-scrolling landing page: the grid fills the available
-                // space and stays put (no bounce / scroll).
-                LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(playlists) { p in playlistCard(p) }
-                    addCard
-                }
-                .padding(4)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                // Feels solid (no bounce) when a few playlists fit on one screen,
+                // and scrolls only once there are enough to overflow.
+                playlistGrid
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 Spacer().frame(height: 16)
                 bottomBar
@@ -76,13 +72,26 @@ struct PlaylistsScreen: View {
 
     // MARK: cards
 
+    @ViewBuilder private var playlistGrid: some View {
+        let grid = LazyVGrid(columns: columns, spacing: 12) {
+            ForEach(playlists) { p in playlistCard(p) }
+            addCard
+        }
+        .padding(4)
+        if #available(iOS 16.4, *) {
+            ScrollView { grid }.scrollBounceBehavior(.basedOnSize)
+        } else {
+            ScrollView { grid }
+        }
+    }
+
     private func playlistCard(_ p: Playlist) -> some View {
         let hostCount = p.hosts().count
         let expiry = ExpiryStore.get(p.id)
         return VStack(alignment: .leading, spacing: 0) {
-            Text(p.name).font(.headline).foregroundStyle(.white).lineLimit(1)
-            Text(p.type.rawValue.lowercased().capitalized).font(.caption).foregroundStyle(Color.textSecondary)
-            Spacer().frame(height: 8)
+            Text(p.name).font(.subheadline.bold()).foregroundStyle(.white).lineLimit(1)
+            Text(p.type.rawValue.lowercased().capitalized).font(.caption2).foregroundStyle(Color.textSecondary)
+            Spacer().frame(height: 6)
             if p.isLocked {
                 Label(tr("Protected"), systemImage: "lock.fill").font(.caption).foregroundStyle(Color.textSecondary)
             } else if hostCount > 1 {
@@ -107,7 +116,7 @@ struct PlaylistsScreen: View {
                 Button { open(p) } label: { Image(systemName: "play.fill").font(.title2).foregroundStyle(Color.hotRed) }
             }
         }
-        .padding(14).frame(height: 162)
+        .padding(12).frame(height: 128)
         .brandCardStyle()
         .contentShape(Rectangle())
         .onTapGesture { open(p) }
@@ -115,11 +124,11 @@ struct PlaylistsScreen: View {
 
     private var addCard: some View {
         Button(action: onAdd) {
-            VStack(spacing: 8) {
-                Image(systemName: "plus").font(.system(size: 40)).foregroundStyle(Color.hotRed)
-                Text(tr("ADD Playlist")).fontWeight(.bold).foregroundStyle(Color.hotRed)
+            VStack(spacing: 6) {
+                Image(systemName: "plus").font(.system(size: 30)).foregroundStyle(Color.hotRed)
+                Text(tr("ADD Playlist")).font(.subheadline.bold()).foregroundStyle(Color.hotRed)
             }
-            .frame(maxWidth: .infinity).frame(height: 150)
+            .frame(maxWidth: .infinity).frame(height: 128)
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.hotRed, lineWidth: 1))
         }
         .buttonStyle(.plain)
