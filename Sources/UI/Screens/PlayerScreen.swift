@@ -19,7 +19,6 @@ struct PlayerScreen: View {
     @State private var currentTitle: String
     @State private var currentResume: String
     @State private var nearEnd = false
-    @State private var showSubMenu = false
     @State private var subStatus: String?
     @State private var queue: [ContentRepository.PlayItem] = []
     @State private var isSeries = false
@@ -52,13 +51,19 @@ struct PlayerScreen: View {
                 .allowsHitTesting(false)
             }
 
-            VStack {
-                HStack {
-                    Button(action: onBack) { Image(systemName: "arrow.left").foregroundStyle(.white).padding(12) }
+            VStack(spacing: 6) {
+                HStack(spacing: 8) {
+                    Text(currentTitle).foregroundStyle(.white).fontWeight(.bold).lineLimit(1)
                     Spacer()
-                    Text(title).foregroundStyle(.white).fontWeight(.bold).lineLimit(1)
-                    Spacer()
-                    Button { showSubMenu = true } label: { Image(systemName: "captions.bubble").foregroundStyle(.white).padding(12) }
+                    audioMenu
+                    subtitleMenu
+                    Button(action: onBack) { topIcon("xmark") }
+                }
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                if let subStatus {
+                    Text(subStatus).font(.caption).foregroundStyle(.white)
+                        .padding(.horizontal, 10).padding(.vertical, 4)
+                        .background(Color.black.opacity(0.55), in: Capsule())
                 }
                 Spacer()
             }
@@ -77,20 +82,6 @@ struct PlayerScreen: View {
                 }
             }
         }
-        .confirmationDialog("Subtitles", isPresented: $showSubMenu, titleVisibility: .visible) {
-            Button("Download English subtitles") { fetchSub("en") }
-            Button("Download French subtitles") { fetchSub("fr") }
-            Button("Download Arabic subtitles") { fetchSub("ar") }
-            Button("Download Spanish subtitles") { fetchSub("es") }
-            if player.hasExternalSubtitle {
-                Button("Subtitle delay +0.5s") { player.shiftSubtitle(step: 1) }
-                Button("Subtitle delay −0.5s") { player.shiftSubtitle(step: -1) }
-                Button("Reset delay") { player.shiftSubtitle(step: 0) }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text(subStatus ?? "Pick embedded tracks from the player's own menu, or fetch external subtitles here.")
-        }
         .onAppear {
             let q = repo.playQueue
             let idx = repo.playIndex
@@ -104,6 +95,58 @@ struct PlayerScreen: View {
             player.load(url: currentUrl, resumeId: currentResume)
         }
         .onDisappear { player.teardown() }
+    }
+
+    // MARK: - Top-right controls
+
+    private func topIcon(_ system: String) -> some View {
+        Image(systemName: system).foregroundStyle(.white).frame(width: 40, height: 40)
+            .background(Color.black.opacity(0.35), in: Circle())
+    }
+
+    private var audioMenu: some View {
+        Menu {
+            if player.audioOptions.isEmpty {
+                Text("Single audio track")
+            } else {
+                ForEach(Array(player.audioOptions.enumerated()), id: \.offset) { _, opt in
+                    Button {
+                        player.selectAudio(opt)
+                    } label: {
+                        if player.selectedAudio() == opt { Label(opt.displayName, systemImage: "checkmark") }
+                        else { Text(opt.displayName) }
+                    }
+                }
+            }
+        } label: { topIcon("waveform") }
+    }
+
+    private var subtitleMenu: some View {
+        Menu {
+            Button { player.selectSubtitle(nil) } label: {
+                if player.selectedSubtitle() == nil { Label(tr("Off"), systemImage: "checkmark") } else { Text(tr("Off")) }
+            }
+            ForEach(Array(player.subtitleOptions.enumerated()), id: \.offset) { _, opt in
+                Button {
+                    player.selectSubtitle(opt)
+                } label: {
+                    if player.selectedSubtitle() == opt { Label(opt.displayName, systemImage: "checkmark") }
+                    else { Text(opt.displayName) }
+                }
+            }
+            Divider()
+            Menu("Download subtitles") {
+                Button("English") { fetchSub("en") }
+                Button("Français") { fetchSub("fr") }
+                Button("العربية") { fetchSub("ar") }
+                Button("Español") { fetchSub("es") }
+            }
+            if player.hasExternalSubtitle {
+                Button("Delay +0.5s") { player.shiftSubtitle(step: 1) }
+                Button("Delay −0.5s") { player.shiftSubtitle(step: -1) }
+                Button("Reset delay") { player.shiftSubtitle(step: 0) }
+            }
+        } label: { topIcon("captions.bubble") }
     }
 
     private func goNext() {

@@ -9,8 +9,7 @@ struct LiveScreen: View {
     let onFullscreenPlay: (String, String) -> Void
 
     @EnvironmentObject var repo: ContentRepository
-    @StateObject private var player = VlcPlayerController()      // inline preview
-    @StateObject private var fsPlayer = VlcPlayerController()    // fullscreen
+    @StateObject private var player = VlcPlayerController()      // shared preview + fullscreen
 
     @State private var mode: LiveMode = .channels
     @State private var searchOpen = false
@@ -98,10 +97,11 @@ struct LiveScreen: View {
             // Three columns that all stay visible: categories (fixed) | channel
             // names (flexible) | preview + guide (flexible).
             HStack(spacing: 0) {
-                leftPane.frame(width: 150)
+                leftPane.frame(width: 148)
                 Divider().background(Color.dividerColor)
-                middlePane.frame(maxWidth: .infinity)
+                middlePane.frame(width: 230)
                 Divider().background(Color.dividerColor)
+                // Preview + guide take all remaining width, so the video is bigger.
                 rightPane.frame(maxWidth: .infinity)
             }
         }
@@ -147,7 +147,7 @@ struct LiveScreen: View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottom) {
                 Color.black
-                VlcPlayerView(controller: player)
+                VlcPlayerView(controller: player, active: !fullscreen)
                 HStack(spacing: 16) {
                     ctrlButton(curIsFav ? "heart.fill" : "heart", tint: .hotRed) { toggleFav() }
                     ctrlButton("folder.badge.plus") { if cur != nil { showFavDialog = true } }
@@ -250,16 +250,15 @@ struct LiveScreen: View {
     }
 
     private var fullscreenPlayer: some View {
+        // Same running player — the video surface just moves here instantly.
         ZStack(alignment: .topLeading) {
             Color.black.ignoresSafeArea()
-            VlcPlayerView(controller: fsPlayer).ignoresSafeArea()
+            VlcPlayerView(controller: player, active: true).ignoresSafeArea()
             Button { fullscreen = false } label: {
                 Image(systemName: "arrow.left").font(.title3).foregroundStyle(.white)
                     .frame(width: 44, height: 44).background(Color.black.opacity(0.4), in: Circle()).padding(16)
             }
         }
-        .onAppear { player.pause(); if let c = cur { fsPlayer.load(url: c.url) } }
-        .onDisappear { fsPlayer.teardown(); player.resume() }
     }
 
     // MARK: rows & chips
@@ -280,7 +279,7 @@ struct LiveScreen: View {
             Text(name).font(.footnote).fontWeight(selected ? .bold : .regular)
                 .foregroundStyle(selected ? Color.hotRed : .white).lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12).padding(.vertical, 11)
+                .padding(.horizontal, 12).padding(.vertical, 8)
                 .background(selected ? Color.hotRed.opacity(0.18) : .clear)
         }
         .buttonStyle(.plain)
@@ -298,13 +297,13 @@ struct LiveScreen: View {
                 if row.archive {
                     // Clean catch-up badge on channels that support it.
                     Image(systemName: "clock.arrow.circlepath")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(Color.hotRed)
-                        .padding(5)
+                        .padding(4)
                         .background(Color.hotRed.opacity(0.15), in: Circle())
                 }
             }
-            .padding(.horizontal, 12).padding(.vertical, 11)
+            .padding(.horizontal, 12).padding(.vertical, 7)
             .background(selected ? Color.hotRed.opacity(0.18) : .clear)
         }
         .buttonStyle(.plain)

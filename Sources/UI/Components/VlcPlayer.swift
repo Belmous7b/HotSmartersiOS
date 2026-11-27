@@ -38,19 +38,24 @@ final class VlcPlayerController: ObservableObject {
 }
 
 /// SwiftUI host for a `VlcPlayerController`'s video output.
+///
+/// `active` lets two views (the inline preview and a fullscreen cover) share ONE
+/// player: only the active surface claims the VLC drawable, so entering/leaving
+/// fullscreen just moves the output of the *same* running stream — instant, with
+/// no reconnect or quality drop.
 struct VlcPlayerView: UIViewRepresentable {
     @ObservedObject var controller: VlcPlayerController
+    var active: Bool = true
 
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
         view.backgroundColor = .black
-        controller.attach(to: view)
+        if active { controller.attach(to: view) }
         return view
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
-        // Re-claim the drawable if another view (e.g. a fullscreen cover) took it.
-        if (controller.mediaPlayer.drawable as? UIView) !== uiView {
+        if active && (controller.mediaPlayer.drawable as? UIView) !== uiView {
             controller.attach(to: uiView)
         }
     }

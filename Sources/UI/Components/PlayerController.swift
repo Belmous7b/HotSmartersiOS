@@ -38,6 +38,32 @@ final class PlayerController: ObservableObject {
 
     init() {
         player.automaticallyWaitsToMinimizeStalling = true
+        player.allowsExternalPlayback = false   // hides the native AirPlay button
+    }
+
+    // MARK: - Embedded audio / subtitle tracks (multi-language streams)
+
+    private func group(_ characteristic: AVMediaCharacteristic) -> AVMediaSelectionGroup? {
+        player.currentItem?.asset.mediaSelectionGroup(forMediaCharacteristic: characteristic)
+    }
+
+    var audioOptions: [AVMediaSelectionOption] { group(.audible)?.options ?? [] }
+    var subtitleOptions: [AVMediaSelectionOption] { group(.legible)?.options ?? [] }
+
+    func selectedAudio() -> AVMediaSelectionOption? {
+        guard let item = player.currentItem, let g = group(.audible) else { return nil }
+        return item.currentMediaSelection.selectedMediaOption(in: g)
+    }
+    func selectedSubtitle() -> AVMediaSelectionOption? {
+        guard let item = player.currentItem, let g = group(.legible) else { return nil }
+        return item.currentMediaSelection.selectedMediaOption(in: g)
+    }
+    func selectAudio(_ opt: AVMediaSelectionOption) {
+        if let g = group(.audible) { player.currentItem?.select(opt, in: g) }
+    }
+    /// Pass nil to turn subtitles off.
+    func selectSubtitle(_ opt: AVMediaSelectionOption?) {
+        if let g = group(.legible) { player.currentItem?.select(opt, in: g) }
     }
 
     // MARK: - Loading
