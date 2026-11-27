@@ -1,0 +1,7 @@
+# Keep LF on checkout everywhere (the macOS CI runner's shell scripts break on CRLF).
+* text=auto eol=lf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.pdf binary

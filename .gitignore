@@ -1,0 +1,19 @@
+# Xcode / build output
+build/
+build-device/
+DerivedData/
+*.ipa
+Payload/
+*.xcarchive
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
