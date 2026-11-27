@@ -25,8 +25,26 @@ struct VodScreen: View {
     private var unit: String { tr(unitLabel.prefix(1).uppercased() + String(unitLabel.dropFirst())) }
     private let allId = "__all__"
 
-    private var counts: [String: Int] {
-        Dictionary(items.map { (($0.group?.nonBlank ?? UNCATEGORIZED), 1) }, uniquingKeysWith: +)
+    // Built ONCE from `items` (not per render / per card) so a 20k+ catalog
+    // doesn't get rescanned on every keystroke or while scrolling.
+    @State private var counts: [String: Int] = [:]
+    @State private var catPosters: [String: [String]] = [:]
+
+    private func rebuildIndexes() {
+        var c: [String: Int] = [:]
+        var posters: [String: [String]] = [:]
+        var all: [String] = []
+        for it in items {
+            let g = it.group?.nonBlank ?? UNCATEGORIZED
+            c[g, default: 0] += 1
+            if let p = it.poster?.nonBlank {
+                if (posters[g]?.count ?? 0) < 3 { posters[g, default: []].append(p) }
+                if all.count < 3 { all.append(p) }
+            }
+        }
+        posters[allId] = all
+        counts = c
+        catPosters = posters
     }
 
     var body: some View {
@@ -60,6 +78,8 @@ struct VodScreen: View {
         .appDialog(item: $pendingCat) { cat in
             PinDialog(onDismiss: { pendingCat = nil }, onSuccess: { unlocked.insert(cat.id); openCat = cat; pendingCat = nil })
         }
+        .onAppear { if counts.isEmpty { rebuildIndexes() } }
+        .onChange(of: items.count) { _ in rebuildIndexes() }
     }
 
     private func header(_ title: String, back: (() -> Void)?) -> some View {
@@ -109,7 +129,7 @@ struct VodScreen: View {
 
     private func categoryCard(_ name: String, _ count: Int, index: Int, catId: String, action: @escaping () -> Void) -> some View {
         let accent: Color = index % 2 == 0 ? .hotRed : .hotOrange
-        let posters = posterUrls(for: catId)
+        let posters = catPosters[catId] ?? []
         let fallbackIcon = unitLabel == "series" ? "rectangle.stack.fill" : "film.fill"
         return Button(action: action) {
             VStack(alignment: .leading, spacing: 6) {
@@ -138,20 +158,6 @@ struct VodScreen: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
-    }
-
-    /// First few distinct poster URLs in a category, for the card's preview collage.
-    private func posterUrls(for catId: String, limit: Int = 3) -> [String] {
-        let pool = catId == allId ? items : items.filter { ($0.group?.nonBlank ?? UNCATEGORIZED) == catId }
-        var urls: [String] = []
-        for it in pool {
-            guard let p = it.poster?.nonBlank else { continue }
-            if !urls.contains(p) {
-                urls.append(p)
-                if urls.count >= limit { break }
-            }
-        }
-        return urls
     }
 
     private func openTapped(_ cat: Category) {

@@ -21,8 +21,12 @@ enum FavoritesStore {
     private static func foldersKey() -> String { "hsu_favs_folders_\(ContentRepository.currentPlaylistId)" }
     private static func itemsKey() -> String { "hsu_favs_items_\(ContentRepository.currentPlaylistId)" }
 
+    /// No active playlist → never touch a shared bucket (keeps playlists isolated).
+    private static var hasPlaylist: Bool { !ContentRepository.currentPlaylistId.isEmpty }
+
     static func folders() -> [FavFolder] {
         var list = [FavFolder(id: defaultFolderId, name: "Favorites")]
+        guard hasPlaylist else { return list }
         if let raw = d.string(forKey: foldersKey()), let arr = JSON.array(raw) {
             for o in arr.compactMap({ $0 as? [String: Any] }) {
                 list.append(FavFolder(id: o.optString("id"), name: o.optString("name")))
@@ -32,6 +36,7 @@ enum FavoritesStore {
     }
 
     private static func saveFolders(_ folders: [FavFolder]) {
+        guard hasPlaylist else { return }
         let arr = folders.filter { $0.id != defaultFolderId }.map { ["id": $0.id, "name": $0.name] }
         d.set(JSON.stringify(arr), forKey: foldersKey())
     }
@@ -50,7 +55,7 @@ enum FavoritesStore {
     }
 
     static func items() -> [FavItem] {
-        guard let raw = d.string(forKey: itemsKey()), let arr = JSON.array(raw) else { return [] }
+        guard hasPlaylist, let raw = d.string(forKey: itemsKey()), let arr = JSON.array(raw) else { return [] }
         return arr.compactMap { $0 as? [String: Any] }.map { o in
             FavItem(
                 folderId: o.optString("folderId"),
@@ -65,6 +70,7 @@ enum FavoritesStore {
     }
 
     private static func saveItems(_ items: [FavItem]) {
+        guard hasPlaylist else { return }
         let arr = items.map { i in
             ["folderId": i.folderId, "kind": i.kind.rawValue, "streamId": i.streamId,
              "name": i.name, "poster": i.poster ?? "", "url": i.url, "group": i.group ?? ""]

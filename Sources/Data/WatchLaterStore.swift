@@ -15,10 +15,11 @@ struct WatchLaterItem: Identifiable, Hashable {
 /// "Watch Later" — titles saved for another time. Per playlist, newest first.
 enum WatchLaterStore {
     private static let d = UserDefaults.standard
+    private static var hasPlaylist: Bool { !ContentRepository.currentPlaylistId.isEmpty }
     private static func key() -> String { "hsu_watch_later_\(ContentRepository.currentPlaylistId)" }
 
     static func items() -> [WatchLaterItem] {
-        guard let raw = d.string(forKey: key()), let arr = JSON.array(raw) else { return [] }
+        guard hasPlaylist, let raw = d.string(forKey: key()), let arr = JSON.array(raw) else { return [] }
         return arr.compactMap { $0 as? [String: Any] }.map { o in
             WatchLaterItem(
                 kind: MediaKind(rawValue: o.optString("kind")) ?? .movie,
@@ -32,6 +33,7 @@ enum WatchLaterStore {
     }
 
     private static func save(_ items: [WatchLaterItem]) {
+        guard hasPlaylist else { return }
         let arr = items.map { i in
             ["kind": i.kind.rawValue, "streamId": i.streamId, "name": i.name,
              "poster": i.poster ?? "", "url": i.url, "group": i.group ?? ""]

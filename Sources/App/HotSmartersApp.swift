@@ -38,12 +38,19 @@ struct HotSmartersApp: App {
 /// Wraps the app in the activation gate + the navigation stack, on the app's
 /// near-black background.
 struct RootView: View {
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
         ZStack {
             Color.darkBg.ignoresSafeArea()
             ActivationGate {
                 RootNavigationView()
             }
+        }
+        // Re-sync with the panel each time the app comes back to the foreground, so
+        // changes made on the panel (playlists added/removed) show up in the app.
+        .onChange(of: scenePhase) { phase in
+            if phase == .active { Task { await ActivationStore.shared.refresh() } }
         }
     }
 }

@@ -111,15 +111,18 @@ final class ContentRepository: ObservableObject {
         if let c = current { _ = await connect(c, force: true) }
     }
 
-    /// Forget everything cached and loaded for a playlist (used after an EDIT).
+    /// Forget everything cached and loaded for a playlist (used after an EDIT) so
+    /// the next connect rebuilds it from scratch, exactly like a brand-new playlist.
     func forget(_ playlistId: String) {
         ContentCache.remove(playlistId)
+        ExpiryStore.remove(playlistId)
         if current?.id == playlistId {
             current = nil
             setAll([], [], [])
             setCategories([], [], [])
             epgUrl = nil
             xtream = nil
+            Epg.shared.clear()
         }
     }
 
