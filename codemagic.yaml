@@ -1,0 +1,43 @@
+# Codemagic CI config (https://codemagic.io) — free macOS build minutes, no Mac
+# and no payment card needed. It generates the Xcode project with XcodeGen, compiles
+# the app, and produces an UNSIGNED .ipa you sign + install with Sideloadly on Windows.
+workflows:
+  ios-unsigned:
+    name: Hot Smarters iOS (unsigned IPA)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      vars:
+        XCODE_PROJECT: "HotSmartersiOS.xcodeproj"
+        XCODE_SCHEME: "HotSmartersiOS"
+    scripts:
+      - name: Install XcodeGen & generate the project
+        script: |
+          which xcodegen || brew install xcodegen
+          xcodegen generate
+      - name: Build unsigned device app
+        script: |
+          set -e
+          xcodebuild \
+            -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+      - name: Package unsigned .ipa
+        script: |
+          set -e
+          APP=$(find build/Build/Products -name '*.app' -path '*iphoneos*' | head -1)
+          echo "Packaging $APP"
+          rm -rf Payload HotSmartersiOS-unsigned.ipa
+          mkdir Payload
+          cp -R "$APP" Payload/
+          zip -qr HotSmartersiOS-unsigned.ipa Payload
+          ls -lh HotSmartersiOS-unsigned.ipa
+    artifacts:
+      - HotSmartersiOS-unsigned.ipa
