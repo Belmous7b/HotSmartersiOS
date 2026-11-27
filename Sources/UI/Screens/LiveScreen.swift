@@ -94,12 +94,14 @@ struct LiveScreen: View {
             .background(Color.darkSurface)
             if searchOpen { SearchField(query: $query).padding(.horizontal, 8).padding(.vertical, 4) }
 
+            // Three columns that all stay visible: categories (fixed) | channel
+            // names (flexible) | preview + guide (flexible).
             HStack(spacing: 0) {
-                leftPane.frame(maxWidth: .infinity)
+                leftPane.frame(width: 150)
                 Divider().background(Color.dividerColor)
-                middlePane.frame(width: 220)
+                middlePane.frame(maxWidth: .infinity)
                 Divider().background(Color.dividerColor)
-                rightPane.frame(maxWidth: .infinity).layoutPriority(2)
+                rightPane.frame(maxWidth: .infinity)
             }
         }
     }

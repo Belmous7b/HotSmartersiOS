@@ -31,17 +31,21 @@ struct AppDialogCard<DialogBody: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 if let icon { Image(systemName: icon).foregroundStyle(Color.hotRed) }
-                Text(title).font(.title2.bold()).foregroundStyle(.white)
+                Text(title).font(.title3.bold()).foregroundStyle(.white)
             }
-            .padding(.bottom, 18)
+            .padding(.bottom, 14)
 
+            // Hug the content (short dialogs stay small); only scroll when the
+            // content would exceed the cap. The `fixedSize` stops the ScrollView
+            // from greedily eating vertical space.
             ScrollView {
                 VStack(alignment: .leading, spacing: 6) { content() }
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxHeight: 420)
+            .frame(maxHeight: 340)
+            .fixedSize(horizontal: false, vertical: true)
 
             if confirmText != nil || dismissText != nil {
                 HStack {
@@ -53,20 +57,20 @@ struct AppDialogCard<DialogBody: View>: View {
                     if let confirmText, let onConfirm {
                         Button(action: onConfirm) {
                             Text(confirmText).fontWeight(.bold).foregroundStyle(.white)
-                                .padding(.horizontal, 18).padding(.vertical, 10)
+                                .padding(.horizontal, 16).padding(.vertical, 8)
                                 .background(Color.hotRed.opacity(confirmEnabled ? 1 : 0.4))
-                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
                         .disabled(!confirmEnabled)
                         .padding(.leading, 10)
                     }
                 }
-                .padding(.top, 22)
+                .padding(.top, 16)
             }
         }
-        .padding(24)
-        .frame(maxWidth: 440)
-        .glass(cornerRadius: 20, alpha: 0.80)
+        .padding(20)
+        .frame(maxWidth: 360)
+        .glass(cornerRadius: 18, alpha: 0.80)
         .padding(.horizontal, 24)
     }
 }

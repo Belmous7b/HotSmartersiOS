@@ -38,14 +38,14 @@ struct PlaylistsScreen: View {
                 }
                 Spacer().frame(height: 16)
 
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(playlists) { p in playlistCard(p) }
-                        addCard
-                    }
-                    .padding(4)
+                // Solid, non-scrolling landing page: the grid fills the available
+                // space and stays put (no bounce / scroll).
+                LazyVGrid(columns: columns, spacing: 14) {
+                    ForEach(playlists) { p in playlistCard(p) }
+                    addCard
                 }
-                .frame(maxHeight: .infinity)
+                .padding(4)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 Spacer().frame(height: 16)
                 bottomBar
@@ -156,16 +156,18 @@ struct PlaylistsScreen: View {
 
     private func barAction(_ system: String, _ label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: 5) {
                 Image(systemName: system).foregroundStyle(Color.hotRed)
-                Text(label).fontWeight(.bold).foregroundStyle(.white)
+                // Shrink-to-fit on one line instead of wrapping ("Set-tings") when space is tight.
+                Text(label).font(.subheadline.weight(.bold)).foregroundStyle(.white)
+                    .lineLimit(1).minimumScaleFactor(0.7)
             }
-            .padding(.horizontal, 14).padding(.vertical, 10)
+            .padding(.horizontal, 10).padding(.vertical, 9)
             .background(LinearGradient.brandCard)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
-        .padding(.leading, 10)
+        .padding(.leading, 6)
     }
 
     // MARK: dialogs

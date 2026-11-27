@@ -96,24 +96,38 @@ struct VodScreen: View {
         let shown = categories.filter { (counts[$0.id] ?? 0) > 0 }
         return ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 12)], spacing: 12) {
-                categoryCard("\(tr("All")) \(unit)", items.count, index: 0) {
+                categoryCard("\(tr("All")) \(unit)", items.count, index: 0, catId: allId) {
                     openCat = Category(id: allId, name: "\(tr("All")) \(unit)")
                 }
                 ForEach(Array(shown.enumerated()), id: \.element.id) { i, cat in
-                    categoryCard(cat.name, counts[cat.id] ?? 0, index: i + 1) { openTapped(cat) }
+                    categoryCard(cat.name, counts[cat.id] ?? 0, index: i + 1, catId: cat.id) { openTapped(cat) }
                 }
             }
             .padding(12)
         }
     }
 
-    private func categoryCard(_ name: String, _ count: Int, index: Int, action: @escaping () -> Void) -> some View {
+    private func categoryCard(_ name: String, _ count: Int, index: Int, catId: String, action: @escaping () -> Void) -> some View {
         let accent: Color = index % 2 == 0 ? .hotRed : .hotOrange
+        let posters = posterUrls(for: catId)
+        let fallbackIcon = unitLabel == "series" ? "rectangle.stack.fill" : "film.fill"
         return Button(action: action) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 4) {
-                    ForEach(0..<3, id: \.self) { _ in
-                        RoundedRectangle(cornerRadius: 6).fill(Color.darkBg).frame(maxWidth: .infinity).frame(height: 96)
+                    ForEach(0..<3, id: \.self) { i in
+                        ZStack {
+                            Color.darkBg
+                            if i < posters.count {
+                                RemoteImage(url: posters[i], contentMode: .fill)
+                            } else {
+                                Image(systemName: fallbackIcon)
+                                    .font(.title3)
+                                    .foregroundStyle(Color.textSecondary.opacity(0.4))
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 96)
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                     }
                 }
                 Text(name).font(.subheadline.bold()).foregroundStyle(.white).lineLimit(1)
@@ -124,6 +138,20 @@ struct VodScreen: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+
+    /// First few distinct poster URLs in a category, for the card's preview collage.
+    private func posterUrls(for catId: String, limit: Int = 3) -> [String] {
+        let pool = catId == allId ? items : items.filter { ($0.group?.nonBlank ?? UNCATEGORIZED) == catId }
+        var urls: [String] = []
+        for it in pool {
+            guard let p = it.poster?.nonBlank else { continue }
+            if !urls.contains(p) {
+                urls.append(p)
+                if urls.count >= limit { break }
+            }
+        }
+        return urls
     }
 
     private func openTapped(_ cat: Category) {

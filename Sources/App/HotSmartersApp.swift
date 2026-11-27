@@ -22,6 +22,9 @@ struct HotSmartersApp: App {
                 .environmentObject(activation)
                 .environment(\.layoutDirection, i18n.isRtl ? .rightToLeft : .leftToRight)
                 .preferredColorScheme(.dark)
+                // Keep the dense TV-style layout at its design size on every device:
+                // a large system / accessibility text size must not inflate the UI.
+                .dynamicTypeSize(.large)
                 // Changing the language flips the WHOLE UI instantly (re-renders the tree).
                 .id(i18n.current)
         }
