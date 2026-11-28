@@ -19,6 +19,7 @@ struct PlaylistsScreen: View {
     @State private var showNotifs = false
     @State private var unread = 0
     @State private var failed: String?
+    @State private var expired: ExpiredBox?
     @State private var pendingDelete: Playlist?
     @State private var pendingLockedDelete: Playlist?
     @State private var lockPin = ""
@@ -62,6 +63,15 @@ struct PlaylistsScreen: View {
                 Text("\"\(box.name)\" isn't responding. The service may be down or your subscription expired — please contact your provider. You'll find their contact under Support.").foregroundStyle(.white)
             }
         }
+        .appDialog(item: $expired) { box in
+            AppDialogCard(title: tr("Playlist expired"), icon: "exclamationmark.triangle.fill",
+                          confirmText: tr("Support"),
+                          onConfirm: { expired = nil; showSupport = true },
+                          dismissText: tr("Close"), onDismiss: { expired = nil }) {
+                Text("\(tr("Your playlist")) \"\(box.name)\" \(tr("has expired. Please contact support to renew."))")
+                    .foregroundStyle(.white)
+            }
+        }
         .task {
             reload()
             await syncFromPanel()
@@ -69,6 +79,12 @@ struct PlaylistsScreen: View {
     }
 
     struct FailedBox: Identifiable { let id = UUID(); let name: String }
+    struct ExpiredBox: Identifiable { let id = UUID(); let name: String }
+
+    private func isExpired(_ p: Playlist) -> Bool {
+        guard let e = ExpiryStore.get(p.id), e > 0 else { return false }
+        return e < Int64(Date().timeIntervalSince1970 * 1000)
+    }
 
     // MARK: cards
 
@@ -260,6 +276,7 @@ struct PlaylistsScreen: View {
     }
 
     private func open(_ p: Playlist) {
+        if isExpired(p) { expired = ExpiredBox(name: p.name); return }
         Task {
             error = nil; connecting = p.name
             let ok = await repo.connect(p)
